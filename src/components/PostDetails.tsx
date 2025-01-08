@@ -36,10 +36,10 @@ export const PostDetails: React.FC<Props> = React.memo(({ selectedPost }) => {
           setComments(data);
           setIsLoading(false);
         })
-        .catch((error) => {
+        .catch((err) => {
           setError('Failed to load comments');
           setIsLoading(false);
-          console.error('Failed to load comments:', error);
+          console.error('Failed to load comments:', err);
         });
     } else {
       setComments([]);
@@ -47,22 +47,20 @@ export const PostDetails: React.FC<Props> = React.memo(({ selectedPost }) => {
   }, [selectedPost]);
 
 
-  const handleDeleteComment = useCallback((commentId: number) => {
-    client
-      .delete(`/comments/${commentId}`)
-      .then(() => {
-        setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
-      })
-      .catch((error) => {
-          setError('Failed to delete comment');
-          console.error('Failed to delete comment:', error);
-      });
+  const handleDeleteComment = useCallback(async (commentId: number) => {
+    try {
+      await client.delete(`/comments/${commentId}`);
+      setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
+    } catch (err) {
+      setError('Failed to delete comment');
+      console.error('Failed to delete comment:', err);
+    }
   }, []);
 
-  
+
   const handleShowForm = useCallback(() => {
     setIsFormVisible(true);
-  }, [selectedPost]);
+  }, []);
 
 
   const addComment = (newComment: Comment) => {

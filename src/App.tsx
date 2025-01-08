@@ -24,8 +24,8 @@ export const App: React.FC = () => {
   useEffect(() => {
     client.get<User[]>('/users')
       .then(setUsers)
-      .catch(() => {
-        console.error('Failed to fetch users');
+      .catch((err) => {
+        console.error('Failed to fetch users:', err);
       });
   }, []);
 
@@ -38,30 +38,32 @@ export const App: React.FC = () => {
 
 
   useEffect(() => {
-    if (selectedUserId) {
-      setIsLoadingPosts(true);
-      setError(null);
+    const fetchPosts = async () => {
+      if (selectedUserId) {
+        setIsLoadingPosts(true);
+        setError(null);
 
-      client
-        .get<Post[]>(`/posts?userId=${selectedUserId}`)
-        .then(data => {
+        try {
+          const data = await client.get<Post[]>(`/posts?userId=${selectedUserId}`);
           setPosts(data);
-          setIsLoadingPosts(false);
-        })
-        .catch((error) => {
+        } catch (err) {
           setError('Failed to load posts');
+          console.error('Failed to load posts:', err);
+        } finally {
           setIsLoadingPosts(false);
-          console.error('Failed to load posts:', error);
-        });
-    }
+        }
+      }
+    };
+
+    fetchPosts();
   }, [selectedUserId]);
 
 
   const handleOpenPost = useCallback((post: Post | null) => {
     setSelectedPost(post);
-  }, [selectedPost]);
+  }, []);
 
-  
+
   return (
     <main className="section">
       <div className="container">
@@ -79,16 +81,9 @@ export const App: React.FC = () => {
 
                 {isLoadingPosts && <Loader />}
 
-                {/* <div
-                className="notification is-danger"
-                data-cy="PostsLoadingError"
-              >
-                Something went wrong!
-              </div> */}
-
                 {error && (
                   <div className="notification is-danger" data-cy="PostsLoadingError">
-                    {error}
+                    Something went wrong!
                   </div>
                 )}
                 {!isLoadingPosts && posts.length === 0 && !error && selectedUser && (
@@ -97,7 +92,7 @@ export const App: React.FC = () => {
                   </div>
                 )}
                 {!isLoadingPosts && posts.length > 0 && (
-                  <PostsList posts={posts} handleOpenPost={handleOpenPost} selectedPostId={selectedPost?.id}/>
+                  <PostsList posts={posts} handleOpenPost={handleOpenPost} selectedPostId={selectedPost?.id} />
                 )}
               </div>
             </div>
@@ -116,7 +111,7 @@ export const App: React.FC = () => {
             )}
           >
             <div className="tile is-child box is-success ">
-             {selectedPost && <PostDetails selectedPost={selectedPost} />}
+              {selectedPost && <PostDetails selectedPost={selectedPost} />}
             </div>
           </div>
         </div>

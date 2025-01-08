@@ -19,7 +19,7 @@ export const PostsList: React.FC<Props> = React.memo(({ posts, handleOpenPost, s
     }
   };
 
-  
+
   return (
     <div data-cy="PostsList">
       <p className="title">Posts:</p>
@@ -48,7 +48,7 @@ export const PostsList: React.FC<Props> = React.memo(({ posts, handleOpenPost, s
                   className={cn("button is-link", {
                     "is-light": selectedPostId !== post.id,
                   })}
-                  onClick={()=>{
+                  onClick={() => {
                     handleTogglePost(post);
                   }}
                 >

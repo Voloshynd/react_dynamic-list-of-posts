@@ -11,9 +11,9 @@ type Props = {
 export const NewCommentForm: React.FC<Props> = React.memo(({ postId, addComment }) => {
 
 
-  const [isLoadingButtton, setIsLoadingButton] = useState(false);
+  const [isLoadingButton, setIsLoadingButton] = useState(false);
   const [newComment, setNewComment] = useState<Comment>({
-    id: +(Math.random().toString().slice(2, 7)),
+    id: Date.now() + Math.floor(Math.random() * 1000),
     postId,
     name: "",
     email: "",
@@ -33,56 +33,56 @@ export const NewCommentForm: React.FC<Props> = React.memo(({ postId, addComment 
     []);
 
 
-    const handleResetForm = useCallback(() => {
-      setNewComment({
-        id: 0,
-        postId,
-        name: "",
-        email: "",
-        body: "",
-      });
+  const handleResetForm = useCallback(() => {
+    setNewComment({
+      id: 0,
+      postId,
+      name: "",
+      email: "",
+      body: "",
+    });
 
-      setFieldsError({
-        name: false,
-        email: false,
-        body: false,
-      });
-    }, [postId]);
+    setFieldsError({
+      name: false,
+      email: false,
+      body: false,
+    });
+  }, [postId]);
 
 
-    const handleSubmitForm = useCallback((e: FormEvent) => {
-      e.preventDefault();
+  const handleSubmitForm = useCallback(async (e: FormEvent) => {
+    e.preventDefault();
 
-      const errors = {
-        name: !newComment.name.length,
-        email: !newComment.email.length,
-        body: !newComment.body.length,
-      };
+    const errors = {
+      name: !newComment.name.length,
+      email: !newComment.email.length,
+      body: !newComment.body.length,
+    };
 
-      setFieldsError(errors);
+    setFieldsError(errors);
 
-      if (!errors.name && !errors.email && !errors.body) {
-        setIsLoadingButton(true);
+    if (!errors.name && !errors.email && !errors.body) {
+      setIsLoadingButton(true);
 
-        client
-        .post('/comments', { ...newComment })
-        .then(() => {
-          addComment(newComment);
-          setNewComment(prev => ({
-            ...prev,
-            body: "",
-          }));
-        })
-        .catch((error) => {
-          console.error('Failed to submit comment:', error);
-        })
-        .finally(() => setIsLoadingButton(false));
+      try {
+        await client
+          .post('/comments', { ...newComment });
+        addComment(newComment);
+        setNewComment(prev => ({
+          ...prev,
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          body: "",
+        }))
+      } catch (err) {
+        console.error('Failed to submit comment:', err);
+      } finally {
+        setIsLoadingButton(false)
       }
+    }
+  }, [newComment, handleResetForm]);
 
-    }, [newComment, handleResetForm]);
 
-
-    return (
+  return (
     <form data-cy="NewCommentForm" onSubmit={handleSubmitForm}>
       <div className="field" data-cy="NameField">
         <label className="label" htmlFor="comment-author-name">
@@ -183,7 +183,7 @@ export const NewCommentForm: React.FC<Props> = React.memo(({ postId, addComment 
 
       <div className="field is-grouped">
         <div className="control">
-          <button type="submit" className={cn("button is-link", { "is-loading": isLoadingButtton })}>
+          <button type="submit" className={cn("button is-link", { "is-loading": isLoadingButton })}>
             Add
           </button>
         </div>
